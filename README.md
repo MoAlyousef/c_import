@@ -47,5 +47,66 @@ fn main() {
 }
 ```
 
+## Using with C++
+```cpp
+// src/my_header.hpp
+#pragma once
+
+namespace my_namespace {
+class MyStruct {
+    int version_;
+  public:
+    MyStruct(int version);
+    int version() const;
+};
+}
+```
+
+```rust
+// src/main.rs
+use c_import::cpp_import;
+
+cpp_import!("src/my_header.hpp");
+
+fn main() {
+    let h = unsafe { my_namespace_MyStruct::new(2) };
+    println!("{}", unsafe { h.version() });
+}
+```
+
+```rust
+// build.rs
+fn main() {
+    // assuming there's a libmy_cpp_lib.a
+    println!("cargo:rustc-link-lib=my_cpp_lib");
+}
+```
+
+Another example:
+```cpp
+// src/fltk_wrapper.h
+#pragma once
+#include <FL/Fl.H>
+```
+
+```rust
+// src/main.rs
+use c_import::cpp_import;
+
+cpp_import!("src/fltk_wrapper.hpp");
+
+fn main() {
+    let version = unsafe { Fl::api_version() };
+    println!("{}", version);
+}
+```
+
+```rust
+// build.rs
+fn main() {
+    println!("cargo:rustc-link-lib=fltk");
+}
+```
+
 ## Limitations
-- It should work for simple C++ headers. Headers exposing C++ std types would likely fail.
+- Bindgen limitations with C++ headers.

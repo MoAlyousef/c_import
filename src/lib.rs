@@ -46,7 +46,7 @@ pub fn c_import(input: TokenStream) -> TokenStream {
     out.parse().unwrap()
 }
 
-// bindgen path --enable-cxx-namespaces --generate-inline-functions --no-layout-tests --no-doc-comments --no-prepend-enum-name --disable-header-comment -- -xc++ -std=c++17
+// bindgen path --generate-inline-functions --no-layout-tests --no-doc-comments --no-prepend-enum-name --disable-header-comment -- -xc++ -std=c++17
 #[proc_macro]
 pub fn cpp_import(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as FileName);
@@ -60,7 +60,7 @@ pub fn cpp_import(input: TokenStream) -> TokenStream {
         .args(&[
             &file_path_str,
             "--generate-inline-functions",
-            "--enable-cxx-namespaces",
+            // "--enable-cxx-namespaces",
             "--no-layout-tests",
             "--no-doc-comments",
             "--no-prepend-enum-name",
@@ -71,6 +71,6 @@ pub fn cpp_import(input: TokenStream) -> TokenStream {
         ])
         .output()
         .unwrap();
-    let out = String::from("use crate::root::*;\n") + &String::from_utf8(out.stdout).unwrap();
+    let out = String::from_utf8(out.stdout).unwrap();
     out.parse().unwrap()
 }
