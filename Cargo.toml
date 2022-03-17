@@ -1,6 +1,6 @@
 [package]
 name = "c_import"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A c_import macro for Rust"
 repository = "https://github.com/MoAlyousef/c_import"
@@ -11,6 +11,3 @@ license = "MIT"
 
 [lib]
 proc-macro = true
-
-[dependencies]
-syn = "1"

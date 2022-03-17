@@ -14,7 +14,7 @@ c_import = "0.1"
 // src/main.rs
 use c_import::c_import;
 
-c_import!("/usr/include/cairo/cairo.h");
+c_import!(<cairo/cairo.h>);
 
 fn main() {
     let version = unsafe { cairo_version() };
@@ -29,14 +29,7 @@ fn main() {
 }
 ```
 
-If you don't want to pass the absolute path of a system header, create a new header file, and include the system header in it. It would benefit from bindgen's include paths searchability.
-
-```c
-// src/my_header.h
-#pragma once
-#include <cairo/cairo.h>
-```
-
+Using non-system headers is also possible via enclosing the header path with quotation marks:
 ```rust
 use c_import::c_import;
 c_import!("src/my_header.h");
@@ -109,4 +102,4 @@ fn main() {
 ```
 
 ## Limitations
-- Bindgen limitations with C++ headers.
+- Mostly bindgen limitations with C++ headers.
