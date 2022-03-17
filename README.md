@@ -3,6 +3,7 @@
 This is a small crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. You need [bindgen](https://github.com/rust-lang/rust-bindgen) to be installed in your system.
 
 ## Usage
+In your Cargo.toml:
 ```toml
 # Cargo.toml
 
@@ -10,6 +11,7 @@ This is a small crate providing a c_import macro (also a cpp_import macro), whic
 c_import = "0.1"
 ```
 
+In your Rust source file:
 ```rust
 // src/main.rs
 use c_import::c_import;
@@ -22,6 +24,7 @@ fn main() {
 }
 ```
 
+In your Rust build script:
 ```rust
 // build.rs
 fn main() {
@@ -31,6 +34,7 @@ fn main() {
 
 Using non-system headers is also possible via enclosing the header path with quotation marks:
 ```rust
+// src/main.rs
 use c_import::c_import;
 c_import!("src/my_header.h");
 
@@ -40,7 +44,29 @@ fn main() {
 }
 ```
 
-## Using with C++
+## Usage with C++ headers (limited)
+
+```rust
+// src/main.rs
+use c_import::cpp_import;
+
+cpp_import!(<FL/Fl.H>);
+
+fn main() {
+    let version = unsafe { Fl::api_version() };
+    println!("{}", version);
+}
+```
+
+```rust
+// build.rs
+fn main() {
+    println!("cargo:rustc-link-lib=fltk");
+}
+```
+
+Another example showing how to deal with C++ namespaces:
+
 ```cpp
 // src/my_header.hpp
 #pragma once
@@ -67,39 +93,6 @@ fn main() {
 }
 ```
 
-```rust
-// build.rs
-fn main() {
-    // assuming there's a libmy_cpp_lib.a
-    println!("cargo:rustc-link-lib=my_cpp_lib");
-}
-```
-
-Another example:
-```cpp
-// src/fltk_wrapper.h
-#pragma once
-#include <FL/Fl.H>
-```
-
-```rust
-// src/main.rs
-use c_import::cpp_import;
-
-cpp_import!("src/fltk_wrapper.hpp");
-
-fn main() {
-    let version = unsafe { Fl::api_version() };
-    println!("{}", version);
-}
-```
-
-```rust
-// build.rs
-fn main() {
-    println!("cargo:rustc-link-lib=fltk");
-}
-```
 
 ## Limitations
 - Mostly bindgen limitations with C++ headers.
