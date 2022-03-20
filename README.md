@@ -1,6 +1,6 @@
 # c_import
 
-This is a small crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. You need [bindgen](https://github.com/rust-lang/rust-bindgen) to be installed in your system.
+This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so it needs to be installed in your system.
 
 ## Usage
 In your Cargo.toml:
@@ -37,6 +37,19 @@ Using non-system headers is also possible via enclosing the header path with quo
 // src/main.rs
 use c_import::c_import;
 c_import!("src/my_header.h");
+
+fn main() {
+    let version = unsafe { cairo_version() };
+    println!("{}", version);
+}
+```
+
+## Extra clang arguments
+You can pass extra clang arguments as extra arguments to the macro:
+```rust
+// src/main.rs
+use c_import::c_import;
+c_import!("src/my_header.h", "-DMY_DEFINE", "-I/somepath/include");
 
 fn main() {
     let version = unsafe { cairo_version() };
