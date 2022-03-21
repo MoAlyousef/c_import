@@ -1,9 +1,9 @@
 use proc_macro::TokenStream;
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::io::Write;
+use std::path::PathBuf;
+use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const FILESTEM: &str = "temphdr";
 const C_ARGS: &[&str] = &[
@@ -26,7 +26,7 @@ const CPP_ARGS: &[&str] = &[
 ];
 
 fn gen_header(input: String, is_cpp: bool) -> PathBuf {
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
     input.hash(&mut hasher);
     let input_hash = hasher.finish();
     let now = SystemTime::now()
@@ -53,8 +53,25 @@ fn del_header(header: Option<PathBuf>) {
     }
 }
 
-pub(crate) fn common(input: TokenStream, is_cpp: bool) -> String {
-    let mut cmd = std::process::Command::new("bindgen");
+fn gen_command(header: String, args: &mut Vec<&str>, is_cpp: bool) -> (Command, Option<PathBuf>) {
+    let mut cmd = Command::new("bindgen");
+    let (path, header) = if header.starts_with('<') && header.ends_with('>') {
+        let header = gen_header(header.split_whitespace().collect(), is_cpp);
+        let path = format!("{}", header.display());
+        (path, Some(header))
+    } else {
+        let cwd = std::env::current_dir().expect("Couldn't get current working dir!");
+        let path = cwd.join(&header.replace('"', ""));
+        let path = format!("{}", path.display());
+        (path, None)
+    };
+    let mut args = args.to_vec();
+    args.insert(0, &path);
+    cmd.args(args);
+    (cmd, header)
+}
+
+pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     let input = input.to_string();
     let input: Vec<&str> = input.split(',').collect();
     let extra_args: Vec<String> = input[1..]
@@ -69,28 +86,14 @@ pub(crate) fn common(input: TokenStream, is_cpp: bool) -> String {
         C_ARGS.to_vec()
     };
     args.append(&mut extra_args.iter().map(|s| s.trim()).collect());
-    let header = if header.starts_with('<') && header.ends_with('>') {
-        let header = gen_header(header.split_whitespace().collect(), is_cpp);
-        let path = format!("{}", header.display());
-        args.insert(0, &path);
-        cmd.args(&args);
-        Some(header)
-    } else {
-        let cwd = std::env::current_dir().expect("Couldn't get current working dir!");
-        let path = cwd.join(&header.replace('"', ""));
-        let path = format!("{}", path.display());
-        args.insert(0, &path);
-        cmd.args(&args);
-        None
-    };
+    let (mut cmd, header) = gen_command(header, &mut args, is_cpp);
     let cmd = cmd.output().expect("Failed to invoke bindgen!");
     del_header(header);
     if !cmd.status.success() {
         std::io::stderr().write_all(&cmd.stderr).unwrap();
     }
-    let ret = String::from_utf8(cmd.stdout)
+    String::from_utf8(cmd.stdout)
         .expect("Failed to parse bindgen output")
         .parse()
-        .unwrap();
-    ret
+        .unwrap()
 }

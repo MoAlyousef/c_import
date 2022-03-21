@@ -1,6 +1,6 @@
 # c_import
 
-This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so it needs to be installed in your system.
+This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so bindgen needs to be installed in your system.
 
 ## Usage
 In your Cargo.toml:
@@ -66,7 +66,7 @@ use c_import::cpp_import;
 cpp_import!(<FL/Fl.H>);
 
 fn main() {
-    let version = unsafe { Fl::api_version() };
+    let version = unsafe { Fl::api_version() }; // static method of class Fl
     println!("{}", version);
 }
 ```

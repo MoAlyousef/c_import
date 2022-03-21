@@ -1,7 +1,7 @@
 /*!
 # c_import
 
-This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so it needs to be installed in your system.
+This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so bindgen needs to be installed in your system.
 
 ## Usage
 In your Cargo.toml:
@@ -67,7 +67,7 @@ use c_import::cpp_import;
 cpp_import!(<FL/Fl.H>);
 
 fn main() {
-    let version = unsafe { Fl::api_version() };
+    let version = unsafe { Fl::api_version() }; // static method of class Fl
     println!("{}", version);
 }
 ```
@@ -112,16 +112,18 @@ fn main() {
 - Mostly bindgen limitations with C++ headers.
 */
 
+#![allow(clippy::needless_doctest_main)]
+
 use proc_macro::TokenStream;
 
 mod utils;
 
 #[proc_macro]
 pub fn c_import(input: TokenStream) -> TokenStream {
-    utils::common(input, false).parse().unwrap()
+    utils::common(input, false)
 }
 
 #[proc_macro]
 pub fn cpp_import(input: TokenStream) -> TokenStream {
-    utils::common(input, true).parse().unwrap()
+    utils::common(input, true)
 }

@@ -1,6 +1,6 @@
 [package]
 name = "c_import"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "A c_import macro for Rust"
 repository = "https://github.com/MoAlyousef/c_import"
