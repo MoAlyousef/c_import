@@ -13,6 +13,7 @@ const C_ARGS: &[&str] = &[
     "--disable-header-comment",
     "--",
     "-std=c17",
+    "-I."
 ];
 const CPP_ARGS: &[&str] = &[
     "--generate-inline-functions",
@@ -23,6 +24,7 @@ const CPP_ARGS: &[&str] = &[
     "--",
     "-xc++",
     "-std=c++17",
+    "-I."
 ];
 
 fn gen_header(input: String, is_cpp: bool) -> PathBuf {
@@ -40,7 +42,7 @@ fn gen_header(input: String, is_cpp: bool) -> PathBuf {
         if is_cpp { "hpp" } else { "h" }
     );
     let f = std::env::temp_dir().join(filename);
-    let input = "#pragma once\n#include ".to_string() + &input;
+    let input = "#pragma once\n".to_string() + &input;
     std::fs::write(&f, &input).expect("Failed to generate temporary header!");
     f
 }
@@ -53,17 +55,12 @@ fn del_header(header: Option<PathBuf>) {
     }
 }
 
-fn gen_command(header: String, args: &mut Vec<&str>, is_cpp: bool) -> (Command, Option<PathBuf>) {
+fn gen_command(header: String, args: &[&str], is_cpp: bool) -> (Command, Option<PathBuf>) {
     let mut cmd = Command::new("bindgen");
-    let (path, header) = if header.starts_with('<') && header.ends_with('>') {
-        let header = gen_header(header.split_whitespace().collect(), is_cpp);
+    let (path, header) = {
+        let header = gen_header(header, is_cpp);
         let path = format!("{}", header.display());
         (path, Some(header))
-    } else {
-        let cwd = std::env::current_dir().expect("Couldn't get current working dir!");
-        let path = cwd.join(&header.replace('"', ""));
-        let path = format!("{}", path.display());
-        (path, None)
     };
     let mut args = args.to_vec();
     args.insert(0, &path);
@@ -74,19 +71,30 @@ fn gen_command(header: String, args: &mut Vec<&str>, is_cpp: bool) -> (Command, 
 pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     let input = input.to_string();
     let input: Vec<&str> = input.split(',').collect();
-    let extra_args: Vec<String> = input[1..]
-        .to_vec()
-        .iter()
-        .map(|s| s.replace('"', ""))
-        .collect();
-    let header = input[0].to_string();
+    let mut headers = vec![];
+    let mut extra_args = vec![];
+    for elem in input {
+        let elem = elem.trim();
+        if elem.starts_with("\"-") {
+            extra_args.push(elem);
+        } else if elem.starts_with("\"<") {
+            headers.push(&elem[1..elem.len() - 1]);
+        } else {
+            headers.push(elem);
+        }
+    }
+    let extra_args: Vec<String> = extra_args.iter().map(|s| s.replace('"', "")).collect();
     let mut args: Vec<&str> = if is_cpp {
         CPP_ARGS.to_vec()
     } else {
         C_ARGS.to_vec()
     };
+    let header = headers
+        .iter()
+        .map(|s| format!("#include {}\n", s))
+        .collect();
     args.append(&mut extra_args.iter().map(|s| s.trim()).collect());
-    let (mut cmd, header) = gen_command(header, &mut args, is_cpp);
+    let (mut cmd, header) = gen_command(header, &args, is_cpp);
     let cmd = cmd.output().expect("Failed to invoke bindgen!");
     del_header(header);
     if !cmd.status.success() {

@@ -8,7 +8,7 @@ In your Cargo.toml:
 # Cargo.toml
 
 [depenedencies]
-c_import = "0.1"
+c_import = "0.2"
 ```
 
 In your Rust source file:
@@ -16,7 +16,7 @@ In your Rust source file:
 // src/main.rs
 use c_import::c_import;
 
-c_import!(<cairo/cairo.h>);
+c_import!("<stdio.h>", "<cairo/cairo.h>");
 
 fn main() {
     let version = unsafe { cairo_version() };
@@ -63,7 +63,7 @@ fn main() {
 // src/main.rs
 use c_import::cpp_import;
 
-cpp_import!(<FL/Fl.H>);
+cpp_import!("<FL/Fl.H>");
 
 fn main() {
     let version = unsafe { Fl::api_version() }; // static method of class Fl
