@@ -1,6 +1,9 @@
 mod cairo {
     use c_import::c_import;
-    c_import!("header.h", "-Isrc");
+    c_import!(
+        "header.h", 
+        "-Isrc"
+    );
 }
 
 fn main() {

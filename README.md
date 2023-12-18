@@ -1,6 +1,7 @@
 # c_import
 
 This is a small proc macro crate providing a c_import macro (also a cpp_import macro), which can be used to import C headers into your program. It leverages [bindgen](https://github.com/rust-lang/rust-bindgen), so bindgen needs to be installed in your system.
+It also works in no_std mode.
 
 ## Usage
 In your Cargo.toml:
@@ -16,7 +17,10 @@ In your Rust source file:
 // src/main.rs
 use c_import::c_import;
 
-c_import!("<stdio.h>", "<cairo/cairo.h>");
+c_import!(
+    "<stdio.h>", 
+    "<cairo/cairo.h>"
+);
 
 fn main() {
     let version = unsafe { cairo_version() };
@@ -49,7 +53,27 @@ You can pass extra clang arguments as extra arguments to the macro:
 ```rust
 // src/main.rs
 use c_import::c_import;
-c_import!("src/my_header.h", "-DMY_DEFINE", "-I/somepath/include");
+c_import!(
+    "src/my_header.h", 
+    "-DMY_DEFINE", 
+    "-I/somepath/include"
+);
+
+fn main() {
+    let version = unsafe { cairo_version() };
+    println!("{}", version);
+}
+```
+
+Similarly you can invoke tools like pkg-config to retrieve cflags and pass them to bindgen:
+```rust
+use c_import::c_import;
+
+c_import!(
+    "<cairo.h>", 
+    "<stdio.h>",
+    "$pkg-config --cflags cairo"
+);
 
 fn main() {
     let version = unsafe { cairo_version() };
@@ -108,4 +132,6 @@ fn main() {
 
 
 ## Limitations
-- Mostly bindgen limitations with C++ headers.
+- Mostly bindgen limitations: 
+  - with C++ headers.
+  - with static inline functions.

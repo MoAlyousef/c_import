@@ -7,15 +7,17 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 const FILESTEM: &str = "temphdr";
 const C_ARGS: &[&str] = &[
+    "--use-core",
     "--no-layout-tests",
     "--no-doc-comments",
     "--no-prepend-enum-name",
     "--disable-header-comment",
     "--",
     "-std=c17",
-    "-I."
+    "-I.",
 ];
 const CPP_ARGS: &[&str] = &[
+    "--use-core",
     "--generate-inline-functions",
     "--no-layout-tests",
     "--no-doc-comments",
@@ -24,7 +26,7 @@ const CPP_ARGS: &[&str] = &[
     "--",
     "-xc++",
     "-std=c++17",
-    "-I."
+    "-I.",
 ];
 
 fn gen_header(input: String, is_cpp: bool) -> PathBuf {
@@ -68,6 +70,18 @@ fn gen_command(header: String, args: &[&str], is_cpp: bool) -> (Command, Option<
     (cmd, header)
 }
 
+fn run_cmd(cmd: &str) -> Vec<String> {
+    let v: Vec<&str> = cmd.split_whitespace().collect();
+    let mut cmd = Command::new(v[0]);
+    cmd.args(&v[1..]);
+    let cmd = cmd.output().expect("Failed to invoke command!");
+    String::from_utf8(cmd.stdout)
+        .expect("Failed to parse output")
+        .split_whitespace()
+        .map(|s| s.to_string())
+        .collect()
+}
+
 pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     let input = input.to_string();
     let input: Vec<&str> = input.split(',').collect();
@@ -76,9 +90,12 @@ pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     for elem in input {
         let elem = elem.trim();
         if elem.starts_with("\"-") {
-            extra_args.push(elem);
+            extra_args.push(elem.to_string());
         } else if elem.starts_with("\"<") {
             headers.push(&elem[1..elem.len() - 1]);
+        } else if elem.starts_with("\"$") {
+            let mut temp = run_cmd(&elem[2..elem.len() - 1]);
+            extra_args.append(&mut temp);
         } else {
             headers.push(elem);
         }
