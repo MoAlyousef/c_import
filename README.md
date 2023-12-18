@@ -81,6 +81,12 @@ fn main() {
 }
 ```
 
+## Macro parameters
+- Normal arguments are considered header files.
+- Arguments starting with `--` are considered bindgen arguments.
+- Arguments starting with `-` are considered cflags, such as include paths or defines ("-I" & "-D" respectively).
+- Arguments starting with `$` are considered shell commands which return cflags, similar to pkg-config.
+
 ## Usage with C++ headers (limited)
 
 ```rust
