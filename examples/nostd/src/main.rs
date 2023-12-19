@@ -15,8 +15,8 @@ c_import::c_import!(
 pub extern "C" fn main(argc: c_int, argv: *const *const c_char) -> c_int {
     unsafe {
         let args = core::slice::from_raw_parts(argv, argc as _);
-        for i in 0..argc {
-            printf("arg %d is %s\n\0".as_ptr() as _, i, args[i as usize]);
+        for (i, arg) in args.iter().enumerate() {
+            printf("arg %d is %s\n\0".as_ptr() as _, i, *arg);
         }
         let version = cairo_version();
         let msg_len = snprintf(core::ptr::null_mut(), 0, "Cairo version is: %d\n\0".as_ptr() as _, version);
