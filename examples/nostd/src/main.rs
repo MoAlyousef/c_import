@@ -4,11 +4,14 @@
 use core::ffi::*;
 use defer_lite::defer;
 
+
 c_import::c_import!(
     "<stdio.h>", 
     "<stdlib.h>",
     "<cairo.h>",
-    "$pkg-config --cflags cairo"
+    "$pkg-config --cflags cairo",
+    "--link cairo", 
+    "--link c"
 );
 
 #[no_mangle]
@@ -32,3 +35,4 @@ pub extern "C" fn main(argc: c_int, argv: *const *const c_char) -> c_int {
 fn ph(_: &core::panic::PanicInfo) -> ! {
     loop {}
 }
+

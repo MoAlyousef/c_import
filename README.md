@@ -19,7 +19,8 @@ use c_import::c_import;
 
 c_import!(
     "<stdio.h>", 
-    "<cairo/cairo.h>"
+    "<cairo/cairo.h>",
+    "--link cairo"
 );
 
 fn main() {
@@ -28,7 +29,7 @@ fn main() {
 }
 ```
 
-In your Rust build script:
+If you don't use the `--link` directive, you can use a Rust build script:
 ```rust
 // build.rs
 fn main() {
@@ -83,6 +84,7 @@ fn main() {
 
 ## Macro parameters
 - Normal arguments are considered header files.
+- Arguments starting with `--link` are used to insert `#[link (name = libname)]` attributes to the generated extern functions, this allows linking the libraries without having to explicitly create a build.rs file containing `println!("cargo:rustc-link-lib=libname");`
 - Arguments starting with `--` are considered bindgen arguments.
 - Arguments starting with `-` are considered cflags, such as include paths or defines ("-I" & "-D" respectively).
 - Arguments starting with `$` are considered shell commands which return cflags, similar to pkg-config.

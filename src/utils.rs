@@ -97,9 +97,12 @@ pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     let mut headers = vec![];
     let mut extra_clang_args = vec![];
     let mut extra_bindgen_args = vec![];
+    let mut links = vec![];
     for elem in input {
         let elem = elem.trim();
-        if elem.starts_with("\"--") {
+        if elem.starts_with("\"--link") {
+            links.push(&elem[8..elem.len() - 1]);
+        } else if elem.starts_with("\"--") {
             extra_bindgen_args.push(elem.to_string());
         } else if elem.starts_with("\"-") {
             extra_clang_args.push(elem.to_string());
@@ -136,8 +139,15 @@ pub(crate) fn common(input: TokenStream, is_cpp: bool) -> TokenStream {
     if !cmd.status.success() {
         std::io::stderr().write_all(&cmd.stderr).unwrap();
     }
-    String::from_utf8(cmd.stdout)
-        .expect("Failed to parse bindgen output")
+    let mut output = String::from_utf8(cmd.stdout).expect("Failed to parse bindgen output");
+    if !links.is_empty() {
+        output.push('\n');
+        for link in links {
+            output.push_str(&format!("#[link(name = \"{}\")]", link));
+        }
+        output.push_str("extern \"C\" {}");
+    }
+    output
         .parse()
         .unwrap()
 }
