@@ -26,10 +26,12 @@ const BINDGEN_CPP_ARGS: &[&str] = &[
 
 const CLANG_C_ARGS: &[&str] = &[
     "-std=c17",
+    "-w",
     "-I.",
 ];
 const CLANG_CPP_ARGS: &[&str] = &[
     "-xc++",
+    "-w",
     "-std=c++17",
     "-I.",
 ];
@@ -72,9 +74,6 @@ fn gen_command(header: String, bindgen_args: &[&str], clang_args: &[&str], is_cp
     cmd.arg(&path);
     cmd.args(bindgen_args);
     cmd.arg("--");
-    if is_cpp {
-        cmd.arg("--xc++");
-    }
     cmd.args(clang_args);
     (cmd, header)
 }
